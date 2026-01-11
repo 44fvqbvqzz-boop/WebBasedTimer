@@ -1,0 +1,534 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hockey Timer</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Arial Black', Arial, sans-serif;
+            background: #000;
+            color: #fff;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .timer-display {
+            font-size: 120px;
+            font-weight: bold;
+            letter-spacing: 8px;
+            text-align: center;
+            margin: 30px 0;
+            text-shadow: 0 0 20px rgba(255, 255, 255, 0.5);
+            font-variant-numeric: tabular-nums;
+            min-width: 400px;
+        }
+        
+        .period-display {
+            font-size: 36px;
+            margin-bottom: 20px;
+            color: #ffd700;
+            display: none;
+        }
+        
+        .controls {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin: 30px 0;
+            max-width: 600px;
+        }
+        
+        button {
+            padding: 15px 30px;
+            font-size: 18px;
+            font-weight: bold;
+            border: 2px solid #fff;
+            background: #1a1a1a;
+            color: #fff;
+            cursor: pointer;
+            border-radius: 8px;
+            transition: all 0.2s;
+        }
+        
+        button:hover {
+            background: #333;
+            transform: scale(1.05);
+        }
+        
+        button:active {
+            transform: scale(0.98);
+        }
+        
+        .btn-start { border-color: #00ff00; color: #00ff00; }
+        .btn-stop { border-color: #ff0000; color: #ff0000; }
+        .btn-reset { border-color: #ffff00; color: #ffff00; }
+        
+        .adjust-controls {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            margin: 20px 0;
+            max-width: 600px;
+        }
+        
+        .adjust-group {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            padding: 15px;
+            background: #1a1a1a;
+            border-radius: 8px;
+        }
+        
+        .adjust-group label {
+            font-size: 14px;
+            color: #ffd700;
+            text-align: center;
+        }
+        
+        .adjust-buttons {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+        }
+        
+        .btn-small {
+            padding: 10px 20px;
+            font-size: 16px;
+        }
+        
+        .period-settings {
+            margin-top: 30px;
+            padding: 20px;
+            background: #1a1a1a;
+            border-radius: 10px;
+            max-width: 600px;
+        }
+        
+        .period-settings h3 {
+            color: #ffd700;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+        
+        .period-inputs {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+        
+        .period-input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        
+        .period-input-group label {
+            font-size: 14px;
+            text-align: center;
+        }
+        
+        .period-input-group input {
+            width: 100%;
+            padding: 10px;
+            font-size: 18px;
+            background: #2a2a2a;
+            border: 2px solid #fff;
+            color: #fff;
+            border-radius: 5px;
+            text-align: center;
+        }
+        
+        .period-buttons {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+            margin-top: 15px;
+        }
+        
+        .status {
+            margin-top: 20px;
+            font-size: 20px;
+            color: #888;
+        }
+        
+        .running { color: #00ff00; }
+        .stopped { color: #ff0000; }
+        
+        .excel-info {
+            margin-top: 30px;
+            padding: 20px;
+            background: #1a1a1a;
+            border-radius: 10px;
+            max-width: 600px;
+            font-size: 14px;
+            line-height: 1.8;
+        }
+        
+        .excel-info h3 {
+            margin-bottom: 10px;
+            color: #ffd700;
+        }
+        
+        .excel-info code {
+            background: #333;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-family: 'Courier New', monospace;
+            color: #00ff00;
+        }
+        
+        .excel-info kbd {
+            background: #333;
+            padding: 3px 8px;
+            border-radius: 3px;
+            border: 1px solid #666;
+            font-family: monospace;
+        }
+        
+        .file-path-section {
+            margin-top: 15px;
+            padding: 15px;
+            background: #2a2a2a;
+            border-radius: 5px;
+        }
+        
+        .file-path-section label {
+            display: block;
+            margin-bottom: 8px;
+            color: #ffd700;
+            font-size: 13px;
+        }
+        
+        .file-path-section input {
+            width: 100%;
+            padding: 8px;
+            background: #1a1a1a;
+            border: 2px solid #666;
+            color: #fff;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+        }
+        
+        .file-path-section button {
+            margin-top: 10px;
+            width: 100%;
+            padding: 10px;
+            font-size: 14px;
+        }
+        
+        .status-indicator {
+            margin-top: 10px;
+            padding: 8px;
+            border-radius: 4px;
+            text-align: center;
+            font-size: 12px;
+        }
+        
+        .status-success {
+            background: #1a3a1a;
+            color: #00ff00;
+            border: 1px solid #00ff00;
+        }
+        
+        .status-error {
+            background: #3a1a1a;
+            color: #ff6666;
+            border: 1px solid #ff6666;
+        }
+    </style>
+</head>
+<body>
+    <div class="timer-display" id="timerDisplay">15:00</div>
+    <div class="status" id="status">Ready</div>
+    
+    <div class="controls">
+        <button class="btn-start" onclick="startTimer()">START</button>
+        <button class="btn-stop" onclick="stopTimer()">STOP</button>
+        <button class="btn-reset" onclick="resetTimer()">RESET</button>
+    </div>
+    
+    <div class="adjust-controls">
+        <div class="adjust-group">
+            <label>Adjust Minutes</label>
+            <div class="adjust-buttons">
+                <button class="btn-small" onclick="adjustTime(-60)">-1 Min</button>
+                <button class="btn-small" onclick="adjustTime(60)">+1 Min</button>
+            </div>
+        </div>
+        <div class="adjust-group">
+            <label>Adjust Seconds</label>
+            <div class="adjust-buttons">
+                <button class="btn-small" onclick="adjustTime(-1)">-1 Sec</button>
+                <button class="btn-small" onclick="adjustTime(1)">+1 Sec</button>
+            </div>
+        </div>
+    </div>
+    
+    <div class="period-settings">
+        <h3>Quick Time Presets (Minutes)</h3>
+        <div class="period-inputs">
+            <div class="period-input-group">
+                <label>Preset 1</label>
+                <input type="number" id="period1Length" min="1" max="99" value="15">
+            </div>
+            <div class="period-input-group">
+                <label>Preset 2</label>
+                <input type="number" id="period2Length" min="1" max="99" value="13">
+            </div>
+            <div class="period-input-group">
+                <label>Preset 3</label>
+                <input type="number" id="period3Length" min="1" max="99" value="20">
+            </div>
+        </div>
+        <div class="period-buttons">
+            <button onclick="setPeriod(1)">Load Preset 1</button>
+            <button onclick="setPeriod(2)">Load Preset 2</button>
+            <button onclick="setPeriod(3)">Load Preset 3</button>
+            <button onclick="setOvertime()">OT (5:00)</button>
+        </div>
+    </div>
+    
+    <div class="excel-info">
+        <h3>Excel Integration (Python Server)</h3>
+        <div class="file-path-section">
+            <label>Server Status:</label>
+            <div id="serverStatus" style="margin-top: 10px; padding: 10px; background: #2a2a2a; border-radius: 5px; text-align: center;">
+                Checking connection...
+            </div>
+        </div>
+        
+        <p style="margin-top: 15px;"><strong>Setup Instructions:</strong></p>
+        <ol style="margin-left: 20px; margin-top: 10px;">
+            <li>Save the Python code (from chat) as <code>timer_server.py</code></li>
+            <li>Open Terminal and run: <code>python3 timer_server.py</code></li>
+            <li>Leave Terminal window open (minimize it)</li>
+            <li>In Excel, press <kbd>Option+F11</kbd> to open VBA editor</li>
+            <li>Insert → Module, paste the VBA code (from chat)</li>
+            <li>Run <code>StartTimerUpdate</code> macro</li>
+            <li>Cell B20 will update every second!</li>
+        </ol>
+        
+        <p style="margin-top: 15px;"><strong>Keyboard Shortcuts:</strong></p>
+        <p><strong>Standard Keys:</strong> <kbd>Space</kbd> Start/Stop | <kbd>R</kbd> Reset | <kbd>1-3</kbd> Load Presets | <kbd>O</kbd> OT</p>
+        <p><kbd>↑/↓</kbd> ±1 Min | <kbd>←/→</kbd> ±1 Sec</p>
+        <p style="margin-top: 10px;"><strong>StreamDeck Global Hotkeys (F-Keys):</strong></p>
+        <p><kbd>F13</kbd> Start/Stop | <kbd>F14</kbd> Reset | <kbd>F15</kbd> +1 Min | <kbd>F16</kbd> -1 Min</p>
+        <p><kbd>F17</kbd> +1 Sec | <kbd>F18</kbd> -1 Sec | <kbd>F19</kbd> Load Preset 1</p>
+        
+        <p style="margin-top: 15px;"><strong>How to assign F13-F19 in StreamDeck:</strong></p>
+        <ol style="margin-left: 20px; margin-top: 10px; font-size: 13px;">
+            <li>In StreamDeck, drag "System → Hotkey" to a button</li>
+            <li>Click the hotkey field in StreamDeck settings</li>
+            <li>Just type: <code>F13</code> (or F14, F15, etc.) - don't try to press the key</li>
+            <li>StreamDeck will recognize the text and assign it properly</li>
+            <li>Repeat for each control you want</li>
+        </ol>
+        <p style="margin-top: 10px; font-size: 13px; color: #ffd700;">✓ These hotkeys work even when the browser is minimized or in the background!</p>
+    </div>
+
+    <script>
+        let totalSeconds = 900; // 15 minutes default
+        let currentSeconds = totalSeconds;
+        let isRunning = false;
+        let intervalId = null;
+        let currentPeriod = 1;
+        
+        // Send time to Python server
+        async function sendTimeToServer(timeString) {
+            try {
+                await fetch('http://localhost:8765', {
+                    method: 'POST',
+                    body: timeString
+                });
+            } catch (err) {
+                // Server not running, ignore
+            }
+        }
+        
+        function updateDisplay() {
+            const minutes = Math.floor(currentSeconds / 60);
+            const seconds = currentSeconds % 60;
+            const timeString = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+            document.getElementById('timerDisplay').textContent = timeString;
+            document.title = timeString;
+            
+            // Send to Python server
+            sendTimeToServer(timeString);
+        }
+        
+        function startTimer() {
+            if (!isRunning) {
+                isRunning = true;
+                document.getElementById('status').textContent = 'Running';
+                document.getElementById('status').className = 'status running';
+                
+                intervalId = setInterval(() => {
+                    if (currentSeconds > 0) {
+                        currentSeconds--;
+                        updateDisplay();
+                    } else {
+                        stopTimer();
+                    }
+                }, 1000);
+            }
+        }
+        
+        function stopTimer() {
+            if (isRunning) {
+                isRunning = false;
+                clearInterval(intervalId);
+                document.getElementById('status').textContent = 'Stopped';
+                document.getElementById('status').className = 'status stopped';
+            }
+        }
+        
+        function resetTimer() {
+            stopTimer();
+            currentSeconds = totalSeconds;
+            updateDisplay();
+            document.getElementById('status').textContent = 'Ready';
+            document.getElementById('status').className = 'status';
+        }
+        
+        function adjustTime(seconds) {
+            currentSeconds = Math.max(0, Math.min(currentSeconds + seconds, 5999));
+            updateDisplay();
+        }
+        
+        function setPeriod(period) {
+            currentPeriod = period;
+            const lengthInput = document.getElementById(`period${period}Length`);
+            totalSeconds = parseInt(lengthInput.value) * 60;
+            resetTimer();
+        }
+        
+        function setOvertime() {
+            currentPeriod = 'OT';
+            totalSeconds = 300;
+            resetTimer();
+        }
+        
+        // Keyboard shortcuts
+        document.addEventListener('keydown', (e) => {
+            // Ignore if typing in input field
+            if (e.target.tagName === 'INPUT') return;
+            
+            // Check for F-key shortcuts (F13-F19 for StreamDeck)
+            if (e.key === 'F13') {
+                e.preventDefault();
+                if (isRunning) stopTimer();
+                else startTimer();
+                return;
+            }
+            if (e.key === 'F14') {
+                e.preventDefault();
+                resetTimer();
+                return;
+            }
+            if (e.key === 'F15') {
+                e.preventDefault();
+                adjustTime(60);
+                return;
+            }
+            if (e.key === 'F16') {
+                e.preventDefault();
+                adjustTime(-60);
+                return;
+            }
+            if (e.key === 'F17') {
+                e.preventDefault();
+                adjustTime(1);
+                return;
+            }
+            if (e.key === 'F18') {
+                e.preventDefault();
+                adjustTime(-1);
+                return;
+            }
+            if (e.key === 'F19') {
+                e.preventDefault();
+                setPeriod(1);
+                return;
+            }
+            
+            // Standard keyboard shortcuts
+            switch(e.key.toLowerCase()) {
+                case ' ':
+                    e.preventDefault();
+                    if (isRunning) stopTimer();
+                    else startTimer();
+                    break;
+                case 'r':
+                    resetTimer();
+                    break;
+                case '1':
+                    setPeriod(1);
+                    break;
+                case '2':
+                    setPeriod(2);
+                    break;
+                case '3':
+                    setPeriod(3);
+                    break;
+                case 'o':
+                    setOvertime();
+                    break;
+                case 'arrowup':
+                    e.preventDefault();
+                    adjustTime(60);
+                    break;
+                case 'arrowdown':
+                    e.preventDefault();
+                    adjustTime(-60);
+                    break;
+                case 'arrowright':
+                    e.preventDefault();
+                    adjustTime(1);
+                    break;
+                case 'arrowleft':
+                    e.preventDefault();
+                    adjustTime(-1);
+                    break;
+            }
+        });
+        
+        // Initialize
+        updateDisplay();
+        
+        // Check server connection status
+        async function checkServerStatus() {
+            try {
+                const response = await fetch('http://localhost:8765');
+                if (response.ok) {
+                    document.getElementById('serverStatus').innerHTML = '<span style="color: #00ff00;">✓ Connected to Python server</span>';
+                    document.getElementById('serverStatus').style.background = '#1a3a1a';
+                    document.getElementById('serverStatus').style.border = '1px solid #00ff00';
+                } else {
+                    throw new Error('Server not responding');
+                }
+            } catch (err) {
+                document.getElementById('serverStatus').innerHTML = '<span style="color: #ff6666;">✗ Python server not running</span><br><span style="font-size: 11px;">Run: python3 timer_server.py in Terminal</span>';
+                document.getElementById('serverStatus').style.background = '#3a1a1a';
+                document.getElementById('serverStatus').style.border = '1px solid #ff6666';
+            }
+        }
+        
+        checkServerStatus();
+        setInterval(checkServerStatus, 5000); // Check every 5 seconds
+    </script>
+</body>
+</html>
